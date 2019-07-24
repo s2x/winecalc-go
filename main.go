@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
@@ -11,22 +12,22 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"encoding/json"
 	"sort"
 )
 
 var templates *template.Template
 var categories map[string][]categoriesData
 
-type layoutData struct{
+type layoutData struct {
 	Content string
-	Data interface{}
+	Data    interface{}
 }
 
 type headData struct {
-	Title string
+	Title       string
 	Description string
-	Keywords string
+	Keywords    string
+	Lang		string
 }
 
 type categoriesData struct {
@@ -34,6 +35,16 @@ type categoriesData struct {
 	Slug  string
 	Order int
 	Lang  string
+    headData
+}
+
+type articleData struct {
+	Categories []categoriesData
+	headData
+}
+
+type articleListData struct {
+	Categories []categoriesData
 	headData
 }
 
@@ -42,27 +53,69 @@ type mainPageData struct {
 	headData
 }
 
-func homePageHandler(w http.ResponseWriter, r *http.Request) {
+type noFoundData struct {
+	Categories []categoriesData
+	headData
+}
+
+func getLangFromRequest(r *http.Request) string {
 	lang := r.Header.Get("Accept-Language")
 	if lang == "" {
 		lang = "pl"
 	}
-	var data mainPageData
-	data.Categories = categories[lang]
+	return lang
+}
 
+func homePageHandler(w http.ResponseWriter, r *http.Request) {
+	lang := getLangFromRequest(r);
+	var data mainPageData
+	data.Categories = categories[lang];
+	data.Lang = lang
 	renderWithLayout(w, "homepage.gohtml", data)
 }
 
 func articleHandler(w http.ResponseWriter, r *http.Request) {
-	renderWithLayout(w, "article.gohtml", nil)
+	lang := getLangFromRequest(r);
+	var data articleData
+	data.Categories = categories[lang];
+	data.Lang = lang
+	renderWithLayout(w, "article.gohtml", data)
 }
 
 func articleListHandler(w http.ResponseWriter, r *http.Request) {
-	renderWithLayout(w, "article-list.gohtml", nil)
+	lang := getLangFromRequest(r);
+	vars := mux.Vars(r)
+	categorySlug := vars["category"]
+
+	var cat *categoriesData
+
+	for _, category := range categories[lang] {
+		if category.Slug == categorySlug {
+			cat = &category
+			break
+		}
+	}
+
+	if cat == nil {
+		notFoundHandler(w,r)
+	} else {
+		var data articleListData
+		data.Categories = categories[lang];
+		data.Lang = lang
+		data.Description = cat.Description
+		data.Keywords = cat.Keywords
+		data.Title = cat.Title
+		renderWithLayout(w, "article-list.gohtml", data)
+	}
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	renderWithLayout(w, "404.gohtml", nil)
+	w.WriteHeader(http.StatusNotFound)
+	lang := getLangFromRequest(r);
+	var data noFoundData
+	data.Categories = categories[lang];
+	data.Lang = lang
+	renderWithLayout(w, "404.gohtml", data)
 }
 
 func renderWithLayout(w http.ResponseWriter, name string, data interface{}) {
@@ -72,7 +125,7 @@ func renderWithLayout(w http.ResponseWriter, name string, data interface{}) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	if err := templates.ExecuteTemplate(w, "layout.gohtml", layoutData{Content:buf.String(), Data: data}); err != nil {
+	if err := templates.ExecuteTemplate(w, "layout.gohtml", layoutData{Content: buf.String(), Data: data}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -89,7 +142,7 @@ func initData() {
 			log.Fatal(err)
 		}
 
-		if err:=json.Unmarshal(jsonData, &category); err != nil {
+		if err := json.Unmarshal(jsonData, &category); err != nil {
 			log.Fatal(err)
 		}
 
@@ -104,7 +157,6 @@ func initData() {
 	}
 }
 
-
 func main() {
 	initData()
 	templates = template.Must(template.ParseGlob("templates/**/*.gohtml"))
@@ -112,8 +164,8 @@ func main() {
 	r := mux.NewRouter()
 	// Routes consist of a path and a handler function.
 	r.HandleFunc("/", homePageHandler)
-	r.HandleFunc("/{Lang:[a-z]{2}}/{category:[a-z]+}", articleListHandler)
-	r.HandleFunc("/{Lang:[a-z]{2}}/{category:[a-z]+}/{slug:[a-z\\-]+}", articleHandler)
+	r.HandleFunc("/{lang:[a-z]{2}}/{category:[a-z\\-]+}", articleListHandler)
+	r.HandleFunc("/{lang:[a-z]{2}}/{category:[a-z]+}/{slug:[a-z\\-]+}", articleHandler)
 	r.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 	// [START setting_port]
 	port := os.Getenv("PORT")
