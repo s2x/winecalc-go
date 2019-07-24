@@ -1,0 +1,138 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.main-head {
+    grid-area: header;
+    background: rgb(61, 79, 93);
+    color: #fff;
+}
+.content {
+    grid-area: content;
+}
+.main-nav {
+    grid-area: nav;
+}
+
+.main-footer {
+    grid-area: footer;
+    text-align: center;
+}
+
+.footer-links {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+.footer-links li {
+    display: inline-block;
+    *display: inline;
+}
+
+.footer-links li a {
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+/* Change the link color to #111 (black) on hover */
+.footer-links li a:hover {
+    background-color: #4CAF50;
+}
+
+.brand-title,
+.brand-tagline {
+    margin: 0;
+}
+.brand-title {
+    text-transform: uppercase;
+}
+
+.brand-title span {
+    font-size: 1.5em;
+    color: darkred;
+}
+.brand-tagline {
+    font-weight: 300;
+    color: rgb(176, 202, 219);
+}
+
+.nav-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: center;
+}
+.nav-item {
+    display: inline-block;
+    *display: inline;
+    zoom: 1;
+}
+.nav-item a {
+    background: transparent;
+    border: 2px solid rgb(176, 202, 219);
+    color: #fff;
+    margin-top: 1em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 85%;
+}
+.nav-item a:hover,
+.nav-item a:focus {
+    border: 2px solid rgb(61, 146, 201);
+    text-decoration: none;
+}
+
+.sidebar {
+    display: none;
+}
+
+.wrapper {
+    display: grid;
+    grid-gap: 0;
+    grid-template-rows: auto auto auto 47px;
+    grid-template-areas:
+            "header"
+            "mainad"
+            "content"
+            "footer";
+    width: 100vw;
+    height: 100vh;
+}
+
+@media (min-width: 720px) {
+    .wrapper {
+        grid-template-columns: 300px 3fr;
+        grid-template-rows: 80px auto 47px;
+        grid-template-areas:
+                "header       mainad"
+                "header       content"
+                "header       footer";
+    }
+}
+
+@media (min-width: 1024px) {
+    .wrapper {
+        grid-template-columns: 350px auto 200px;
+        grid-template-rows: 80px auto 47px;
+        grid-template-areas:
+                "header mainad sidebar"
+                "header content sidebar"
+                "header footer  footer"
+    }
+    .sidebar {
+        display: block;
+    }
+
+    .main-head .title {
+        margin: 80% 2em 0;
+        text-align: right;
+    }
+}

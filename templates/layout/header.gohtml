@@ -1,0 +1,14 @@
+<header class="main-head">
+    <div class="title">
+        <h1 class="brand-title">szumigłowa.pl</h1>
+        <h2 class="brand-tagline">Zrób wino w domu</h2>
+    </div>
+
+    <nav class="main-nav">
+        <ul class="nav-list">
+            {{ range $index, $category := .Data.Categories}}
+                <li class="nav-item"><a class="pure-button" href="/{{ $category.Lang }}/{{ $category.Slug}}">{{$category.Name}}</a></li>
+            {{ end }}
+        </ul>
+    </nav>
+</header>

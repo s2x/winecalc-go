@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html lang="pl">
+<head>
+    {{template "head.gohtml" .}}
+</head>
+<body>
+<div class="wrapper">
+    {{template "header.gohtml" .}}
+
+    <article class="content">
+        {{ .Content }}
+    </article>
+    <div class="mainad"><span>Advertising main</span></div>
+    <div class="sidebar"><span>Advertising side</span></div>
+    {{template "footer.gohtml" .}}
+</div>
+</body>
+</html>
