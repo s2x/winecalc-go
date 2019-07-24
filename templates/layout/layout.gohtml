@@ -10,8 +10,8 @@
     <article class="content">
         {{ .Content }}
     </article>
-    <div class="mainad"><span>Advertising main</span></div>
-    <div class="sidebar"><span>Advertising side</span></div>
+    <div class="mainad">{{template "main-ad.gohtml" .}}</div>
+    <div class="sidebar">{{template "side-ad.gohtml" .}}</div>
     {{template "footer.gohtml" .}}
 </div>
 </body>

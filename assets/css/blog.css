@@ -28,6 +28,7 @@ body {
     padding: 0;
     overflow: hidden;
     background-color: #333;
+    height: 47px;
 }
 
 .footer-links li {
@@ -136,7 +137,7 @@ body {
 
 @media (min-width: 1280px) {
     .wrapper {
-        grid-template-columns: 350px auto 200px;
+        grid-template-columns: 350px auto 300px;
         grid-template-rows: 80px auto 47px;
         grid-template-areas:
                 "header mainad sidebar"
