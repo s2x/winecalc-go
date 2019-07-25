@@ -5,6 +5,5 @@
 <meta name="keywords" content="{{ .Data.Keywords }}"/>
 <meta name="description" content="{{ .Data.Description }}"/>
 {{if .Data.Canonical }}<link rel="canonical" href="{{ .Data.Canonical }}" />{{end}}
-<link rel="stylesheet" href="/assets/css/blog.css">
-<link rel="stylesheet" href="/assets/css/pure-min.css">
+<style type="text/css">{{ .MinCss | printf "%s" }}</style>
 <link rel="shortcut icon" href="/assets/images/favicon.ico">

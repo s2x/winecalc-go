@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"html/template"
+	"text/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -19,9 +19,11 @@ var templates *template.Template
 var categories map[string][]categoriesData
 var domain string
 var router* mux.Router
+var minifycss string
 
 type layoutData struct {
 	Content string
+	MinCss     string
 	Data    interface{}
 }
 
@@ -135,7 +137,7 @@ func renderWithLayout(w http.ResponseWriter, name string, data interface{}) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	if err := templates.ExecuteTemplate(w, "layout.gohtml", layoutData{Content: buf.String(), Data: data}); err != nil {
+	if err := templates.ExecuteTemplate(w, "layout.gohtml", layoutData{Content: buf.String(), Data: data, MinCss: minifycss}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -164,6 +166,16 @@ func initData() {
 		sort.Slice(items, func(i, j int) bool {
 			return items[i].Order < items[j].Order
 		})
+	}
+
+	files, _ = filepath.Glob("data/css/*.css")
+	for _, file := range files {
+		data, err := ioutil.ReadFile(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		minifycss = fmt.Sprintf("%s\n%s", minifycss, string(data))
 	}
 }
 
