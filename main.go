@@ -17,6 +17,8 @@ import (
 
 var templates *template.Template
 var categories map[string][]categoriesData
+var domain string
+var router* mux.Router
 
 type layoutData struct {
 	Content string
@@ -28,6 +30,7 @@ type headData struct {
 	Description string
 	Keywords    string
 	Lang		string
+	Canonical   string
 }
 
 type categoriesData struct {
@@ -67,23 +70,27 @@ func getLangFromRequest(r *http.Request) string {
 }
 
 func homePageHandler(w http.ResponseWriter, r *http.Request) {
-	lang := getLangFromRequest(r);
+	lang := getLangFromRequest(r)
 	var data mainPageData
-	data.Categories = categories[lang];
+	url, _ := router.Get("homepage").URLPath()
+	data.Categories = categories[lang]
 	data.Lang = lang
+	data.Canonical = domain + url.String()
 	renderWithLayout(w, "homepage.gohtml", data)
 }
 
 func articleHandler(w http.ResponseWriter, r *http.Request) {
-	lang := getLangFromRequest(r);
+	lang := getLangFromRequest(r)
 	var data articleData
-	data.Categories = categories[lang];
+	url, _ := router.Get("article").URLPath()
+	data.Categories = categories[lang]
 	data.Lang = lang
+	data.Canonical = domain + url.String()
 	renderWithLayout(w, "article.gohtml", data)
 }
 
 func articleListHandler(w http.ResponseWriter, r *http.Request) {
-	lang := getLangFromRequest(r);
+	lang := getLangFromRequest(r)
 	vars := mux.Vars(r)
 	categorySlug := vars["category"]
 
@@ -99,9 +106,12 @@ func articleListHandler(w http.ResponseWriter, r *http.Request) {
 	if cat == nil {
 		notFoundHandler(w,r)
 	} else {
+		url, _ := router.Get("article-list").URLPath("lang", lang, "category", cat.Slug)
+
 		var data articleListData
-		data.Categories = categories[lang];
+		data.Categories = categories[lang]
 		data.Lang = lang
+		data.Canonical = domain + url.String()
 		data.Description = cat.Description
 		data.Keywords = cat.Keywords
 		data.Title = cat.Title
@@ -111,9 +121,9 @@ func articleListHandler(w http.ResponseWriter, r *http.Request) {
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	lang := getLangFromRequest(r);
+	lang := getLangFromRequest(r)
 	var data noFoundData
-	data.Categories = categories[lang];
+	data.Categories = categories[lang]
 	data.Lang = lang
 	renderWithLayout(w, "404.gohtml", data)
 }
@@ -158,15 +168,16 @@ func initData() {
 }
 
 func main() {
+	initConfig()
 	initData()
 	templates = template.Must(template.ParseGlob("templates/**/*.gohtml"))
 
-	r := mux.NewRouter()
+	router = mux.NewRouter()
 	// Routes consist of a path and a handler function.
-	r.HandleFunc("/", homePageHandler)
-	r.HandleFunc("/{lang:[a-z]{2}}/{category:[a-z\\-]+}", articleListHandler)
-	r.HandleFunc("/{lang:[a-z]{2}}/{category:[a-z]+}/{slug:[a-z\\-]+}", articleHandler)
-	r.NotFoundHandler = http.HandlerFunc(notFoundHandler)
+	router.HandleFunc("/", homePageHandler).Name("homepage")
+	router.HandleFunc("/{lang:[a-z]{2}}/{category:[a-z\\-]+}", articleListHandler).Name("article-list")
+	router.HandleFunc("/{lang:[a-z]{2}}/{category:[a-z]+}/{slug:[a-z\\-]+}", articleHandler).Name("article")
+	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 	// [START setting_port]
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -174,5 +185,9 @@ func main() {
 		log.Printf("Defaulting to port %s", port)
 	}
 	// Bind to a port and pass our router in
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), router))
+}
+
+func initConfig() {
+	domain = "https://winecalc.crazy-goat.com" //@todo read from json
 }
